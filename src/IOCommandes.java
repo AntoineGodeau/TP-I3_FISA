@@ -1,4 +1,3 @@
-//package unilasalle.codejava.io; 
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -147,7 +146,7 @@ class IOCommandes{
 				}				
 			}
 			else{
-				ecrireEcran(text + " n'est pas un repertoite");
+				ecrireEcran(text + " n'est pas un repertoire");
 			}	
 		}
 		else{
