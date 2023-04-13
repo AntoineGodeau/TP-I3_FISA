@@ -1,4 +1,6 @@
 
+import com.sun.source.tree.BreakTree;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.BufferedWriter;
@@ -67,7 +69,7 @@ class IOCommandes{
 				String line=lineBuff.readLine();
 				while (line !=null){
 					//ecrireEcran(line);
-					textF=textF+line+"\n";				
+					textF += line + "\n";
 					line=lineBuff.readLine();
 				}	
 				lineBuff.close();
@@ -87,8 +89,8 @@ class IOCommandes{
 		String[] lines = data.split("\n");
 
 		int NB = lines.length -1;
-		int i=0;
-		for( i = 0; i < NB; i++)
+		int i = 0;
+		for(; i < NB; i++)
 		{
 			ecrireEcran(lines[i+1] + "\n");		
 		}	
@@ -104,8 +106,8 @@ class IOCommandes{
 		
 		Processus[] process = new Processus[NB];
 			
-		int i=0;
-		for( i = 0; i < NB; i++)
+		int i = 0;
+		for(; i < NB; i++)
 		{
 			//io.ecrireEcran(lines[i+1] + "\n");
 			String [] splitArray=lines[i+1].split("\t");
@@ -120,7 +122,7 @@ class IOCommandes{
 	//écriture dans un fichier
 	public void ecrireFile(String text, String msg){
 		try {
-			fos = new FileWriter(new File(text), true); //absolument le true sinon écrasement
+			fos = new FileWriter(text, true); //absolument le true sinon écrasement
 			BufferedWriter fot=new BufferedWriter(fos);
 			
 			fot.write(msg+"\n");						
@@ -132,18 +134,22 @@ class IOCommandes{
 	}
 	
 	//Directory
-	public void lireRepertoire(String text){
+	public String[] lireRepertoire(String text){
 		File file=new File(text);
 		String [] listeFiles;
-		int i=0;
+		int i = 0;
 		if(file.exists()){
 			if(file.isDirectory()){
 				
 				listeFiles=file.list();
-				for (i=0; i<listeFiles.length; i++){
+				if (listeFiles == null) {
+					return null;
+				}
+				for (; i < listeFiles.length; i++){
 					int indice=i+1;
-					ecrireEcran(indice+" "+listeFiles[i]+"\n");					
-				}				
+					ecrireEcran(indice + " - " + listeFiles[i] + "\n");
+				}
+				return listeFiles;
 			}
 			else{
 				ecrireEcran(text + " n'est pas un repertoire");
@@ -152,6 +158,50 @@ class IOCommandes{
 		else{
 				ecrireEcran(text + " n'existe pas");
 			}
-	}	
+		return null;
+	}
 
+
+	private void moveProcess(Processus[] processuses, int begin) {
+		if (processuses.length - 1 - begin >= 0)
+			System.arraycopy(processuses, begin, processuses, begin + 1, processuses.length - 1 - begin);
+	}
+
+
+	public Processus[] reorgProcessFIFO(Processus[] processuses) {
+		Processus[] returnList = new Processus[processuses.length];
+		returnList[0] = processuses[0];
+
+		for (int i = 1; i < processuses.length; i++) {
+			Processus proc = processuses[i];
+			int procId = 0;
+
+			// Vérification de la date d'arrivée
+			for (; procId < returnList.length; procId++) {
+				if (returnList[procId] == null) {
+					returnList[procId] = proc;
+				}
+				if (returnList[procId].arrive_t > proc.arrive_t) {
+					// Echange de place - on décale de 1 tout ceux d'après
+					moveProcess(returnList, procId);
+					returnList[procId] = proc;
+					break;
+				} else if (returnList[procId].arrive_t == proc.arrive_t) {
+					// Récupération de la priorité
+					if (returnList[procId].priority_l > proc.priority_l) {
+						moveProcess(returnList, procId);
+						returnList[procId] = proc;
+						break;
+					} else if (returnList[procId].priority_l == proc.priority_l) {
+						if (returnList[procId].ioAt_t > proc.ioAt_t) {
+							moveProcess(returnList, procId);
+							returnList[procId] = proc;
+							break;
+						}
+					}
+				}
+			}
+		}
+		return returnList;
+	}
 }
